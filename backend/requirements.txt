@@ -8,3 +8,9 @@ databases[postgresql]==0.4.3
 psycopg2-binary==2.8.6
 SQLAlchemy==1.3.24
 alembic==1.5.8
+
+# dev
+pytest==6.2.3             # nossa estrutura de teste
+pytest-asyncio==0.15.1    # fornece utilitários para testar código assíncrono
+httpx==0.18.0             # fornece um cliente de solicitação assíncrona para pontos de extremidade de teste
+asgi-lifespan==1.0.1      # permite testar aplicativos assíncronos sem ter que ligar um servidor ASGI
