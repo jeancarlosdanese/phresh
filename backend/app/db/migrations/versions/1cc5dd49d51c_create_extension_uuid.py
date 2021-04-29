@@ -6,7 +6,6 @@ Create Date: 2021-04-27 00:46:14.693316
 
 """
 from alembic import op
-import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 
 
@@ -21,12 +20,22 @@ depends_on = None
 
 
 def upgrade() -> None:
-    bind = op.get_bind()
-    session = Session(bind=bind)
-    session.execute("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
+    # bind = op.get_bind()
+    # session = Session(bind=bind)
+    # session.execute("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
+    op.execute(
+        """
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        """
+    )
 
 
 def downgrade() -> None:
-    bind = op.get_bind()
-    session = Session(bind=bind)
-    session.execute("DROP EXTENSION IF EXISTS \"uuid-ossp\";")
+    # bind = op.get_bind()
+    # session = Session(bind=bind)
+    # session.execute("DROP EXTENSION IF EXISTS \"uuid-ossp\";")
+    op.execute(
+        """
+        DROP EXTENSION IF EXISTS "uuid-ossp";
+        """
+    )
