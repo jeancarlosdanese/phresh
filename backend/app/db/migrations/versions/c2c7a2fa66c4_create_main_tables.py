@@ -57,9 +57,9 @@ def create_cleanings_table() -> None:
         "cleanings",
         sa.Column("id", UUID(as_uuid=True), primary_key=True,
                   server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("name", sa.Text, nullable=False, index=True),
-        sa.Column("description", sa.Text, nullable=True),
-        sa.Column("cleaning_type", sa.Text, nullable=False,
+        sa.Column("name", sa.String(140), nullable=False, index=True),
+        sa.Column("description", sa.String(254), nullable=True),
+        sa.Column("cleaning_type", sa.String(20), nullable=False,
                   server_default="spot_clean"),
         sa.Column("price", sa.Numeric(10, 2), nullable=False),
         *timestamps(),
@@ -80,13 +80,13 @@ def create_users_table() -> None:
         "users",
         sa.Column("id", UUID(as_uuid=True), primary_key=True,
                   server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("username", sa.Text, unique=True,
+        sa.Column("username", sa.String(140), unique=True,
                   nullable=False, index=True),
-        sa.Column("email", sa.Text, unique=True, nullable=False, index=True),
+        sa.Column("email", sa.String(140), unique=True, nullable=False, index=True),
         sa.Column("email_verified", sa.Boolean,
                   nullable=False, server_default="False"),
-        sa.Column("salt", sa.Text, nullable=False),
-        sa.Column("password", sa.Text, nullable=False),
+        sa.Column("salt", sa.String(72), nullable=False),
+        sa.Column("password", sa.String(144), nullable=False),
         sa.Column("is_active", sa.Boolean(),
                   nullable=False, server_default="True"),
         sa.Column("is_superuser", sa.Boolean(),
@@ -104,13 +104,39 @@ def create_users_table() -> None:
     )
 
 
+def create_profiles_table() -> None:
+    op.create_table(
+        "profiles",
+        sa.Column("id", UUID(as_uuid=True), primary_key=True,
+                  server_default=sa.text("uuid_generate_v4()")),
+        sa.Column("full_name", sa.String(140), nullable=True),
+        sa.Column("phone_number", sa.String(20), nullable=True),
+        sa.Column("bio", sa.Text, nullable=True, server_default=""),
+        sa.Column("image", sa.String(254), nullable=True),
+        sa.Column("user_id", UUID(as_uuid=True), sa.ForeignKey(
+            "users.id", ondelete="CASCADE")),
+        *timestamps(),
+    )
+    op.execute(
+        """
+        CREATE TRIGGER update_profiles_modtime
+            BEFORE UPDATE
+            ON profiles
+            FOR EACH ROW
+        EXECUTE PROCEDURE update_updated_at_column();
+        """
+    )
+
+
 def upgrade() -> None:
     create_updated_at_trigger()
     create_cleanings_table()
     create_users_table()
+    create_profiles_table()
 
 
 def downgrade() -> None:
+    op.drop_table("profiles")
     op.drop_table("users")
     op.drop_table("cleanings")
     op.execute("DROP FUNCTION update_updated_at_column")
