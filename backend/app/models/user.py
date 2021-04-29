@@ -3,9 +3,10 @@ from typing import Optional
 from pydantic import EmailStr, constr
 
 from app.models.core import DateTimeModelMixin, IDModelMixin, CoreModel
+from app.models.token import AccessToken
+
+
 # simple check for valid username
-
-
 class UserBase(CoreModel):
     """
     Leaving off password and salt from base model
@@ -51,4 +52,4 @@ class UserInDB(IDModelMixin, DateTimeModelMixin, UserBase):
 
 
 class UserPublic(IDModelMixin, DateTimeModelMixin, UserBase):
-    pass
+    access_token: Optional[AccessToken]
