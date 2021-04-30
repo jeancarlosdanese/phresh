@@ -54,15 +54,16 @@ async def client(app: FastAPI) -> AsyncClient:
 
 
 @pytest.fixture
-async def test_cleaning(db: Database) -> CleaningInDB:
-    cleaning_repo = CleaningsRepository(db)
-    new_cleaning = CleaningCreate(
-        name="fake cleaning name",
-        description="fake cleaning description",
-        price=9.99,
-        cleaning_type="spot_clean",
-    )
-    return await cleaning_repo.create_cleaning(new_cleaning=new_cleaning)
+def authorized_client(client: AsyncClient, test_user: UserInDB) -> AsyncClient:
+    access_token = auth_service.create_access_token_for_user(
+        user=test_user, secret_key=str(SECRET_KEY))
+
+    client.headers = {
+        **client.headers,
+        "Authorization": f"{JWT_TOKEN_PREFIX} {access_token}",
+    }
+
+    return client
 
 
 @pytest.fixture
@@ -96,13 +97,12 @@ async def test_user2(db: Database) -> UserInDB:
 
 
 @pytest.fixture
-def authorized_client(client: AsyncClient, test_user: UserInDB) -> AsyncClient:
-    access_token = auth_service.create_access_token_for_user(
-        user=test_user, secret_key=str(SECRET_KEY))
-
-    client.headers = {
-        **client.headers,
-        "Authorization": f"{JWT_TOKEN_PREFIX} {access_token}",
-    }
-
-    return client
+async def test_cleaning(db: Database, test_user: UserInDB) -> CleaningInDB:
+    cleaning_repo = CleaningsRepository(db)
+    new_cleaning = CleaningCreate(
+        name="fake cleaning name",
+        description="fake cleaning description",
+        price=9.99,
+        cleaning_type="spot_clean",
+    )
+    return await cleaning_repo.create_cleaning(new_cleaning=new_cleaning, requesting_user=test_user)

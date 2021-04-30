@@ -9,7 +9,6 @@ from typing import Tuple
 from sqlalchemy.dialects.postgresql import UUID
 from alembic import op
 import sqlalchemy as sa
-import uuid
 
 # revision identifiers, used by Alembic
 revision = 'c2c7a2fa66c4'
@@ -52,29 +51,6 @@ def timestamps(indexed: bool = False) -> Tuple[sa.Column, sa.Column]:
     )
 
 
-def create_cleanings_table() -> None:
-    op.create_table(
-        "cleanings",
-        sa.Column("id", UUID(as_uuid=True), primary_key=True,
-                  server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("name", sa.String(140), nullable=False, index=True),
-        sa.Column("description", sa.String(254), nullable=True),
-        sa.Column("cleaning_type", sa.String(20), nullable=False,
-                  server_default="spot_clean"),
-        sa.Column("price", sa.Numeric(10, 2), nullable=False),
-        *timestamps(),
-    )
-    op.execute(
-        """
-        CREATE TRIGGER update_cleanings_modtime
-            BEFORE UPDATE
-            ON cleanings
-            FOR EACH ROW
-        EXECUTE PROCEDURE update_updated_at_column();
-        """
-    )
-
-
 def create_users_table() -> None:
     op.create_table(
         "users",
@@ -82,7 +58,8 @@ def create_users_table() -> None:
                   server_default=sa.text("uuid_generate_v4()")),
         sa.Column("username", sa.String(140), unique=True,
                   nullable=False, index=True),
-        sa.Column("email", sa.String(140), unique=True, nullable=False, index=True),
+        sa.Column("email", sa.String(140), unique=True,
+                  nullable=False, index=True),
         sa.Column("email_verified", sa.Boolean,
                   nullable=False, server_default="False"),
         sa.Column("salt", sa.String(72), nullable=False),
@@ -128,15 +105,39 @@ def create_profiles_table() -> None:
     )
 
 
+def create_cleanings_table() -> None:
+    op.create_table(
+        "cleanings",
+        sa.Column("id", UUID(as_uuid=True), primary_key=True,
+                  server_default=sa.text("uuid_generate_v4()")),
+        sa.Column("name", sa.String(140), nullable=False, index=True),
+        sa.Column("description", sa.String(254), nullable=True),
+        sa.Column("cleaning_type", sa.String(20), nullable=False,
+                  server_default="spot_clean"),
+        sa.Column("price", sa.Numeric(10, 2), nullable=False),
+        sa.Column("owner", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE")),  
+        *timestamps(indexed=True),
+    )
+    op.execute(
+        """
+        CREATE TRIGGER update_cleanings_modtime
+            BEFORE UPDATE
+            ON cleanings
+            FOR EACH ROW
+        EXECUTE PROCEDURE update_updated_at_column();
+        """
+    )
+
+
 def upgrade() -> None:
     create_updated_at_trigger()
-    create_cleanings_table()
     create_users_table()
     create_profiles_table()
+    create_cleanings_table()
 
 
 def downgrade() -> None:
+    op.drop_table("cleanings")
     op.drop_table("profiles")
     op.drop_table("users")
-    op.drop_table("cleanings")
     op.execute("DROP FUNCTION update_updated_at_column")
