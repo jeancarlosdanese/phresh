@@ -2,6 +2,8 @@ from typing import Optional, Union
 from enum import Enum
 from uuid import UUID
 
+from pydantic import constr
+
 from app.models.core import IDModelMixin, DateTimeModelMixin, CoreModel
 from app.models.user import UserPublic
 
@@ -16,8 +18,8 @@ class CleaningBase(CoreModel):
     """
     All common characteristics of our Cleaning resource
     """
-    name: Optional[str]
-    description: Optional[str]
+    name: Optional[constr(strip_whitespace=True, max_length=140)]
+    description: Optional[constr(strip_whitespace=True, max_length=254)]
     price: Optional[float]
     cleaning_type: Optional[CleaningType] = "spot_clean"
 

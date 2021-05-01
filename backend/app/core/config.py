@@ -5,7 +5,7 @@ from starlette.datastructures import Secret
 config = Config(".env")
 
 PROJECT_NAME = "phresh"
-VERSION = "1.0.11"
+VERSION = "1.0.12"
 API_PREFIX = "/api"
 
 SECRET_KEY = config("SECRET_KEY", cast=Secret)

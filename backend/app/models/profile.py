@@ -1,13 +1,14 @@
 from typing import Optional
 
-from pydantic import EmailStr, HttpUrl, Field
+from pydantic import EmailStr, HttpUrl, Field, constr, validator
 from app.models.core import DateTimeModelMixin, IDModelMixin, CoreModel
 
 from uuid import UUID, uuid4
 
+
 class ProfileBase(CoreModel):
-    full_name: Optional[str]
-    phone_number: Optional[str]
+    full_name: Optional[constr(strip_whitespace=True, max_length=140)]
+    phone_number: Optional[constr(strip_whitespace=True, max_length=50)]
     bio: Optional[str]
     image: Optional[HttpUrl]
 
